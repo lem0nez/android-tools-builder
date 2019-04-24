@@ -336,7 +336,7 @@ check_pkgs() {
       if ! grep -qiE '^(y|yes)$' <<< "$answer"; then
         # shellcheck disable=SC2059
         printf 'Tip: on Debian-based distributions you can\n'`
-            `'install required packages via "apt install" command.\n'`
+            `'install required packages via "sudo apt install" command.\n'`
             `'\n'`
             `'Build stopped.\n'
         exit 1

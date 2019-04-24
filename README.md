@@ -1,3 +1,7 @@
+![License](https://img.shields.io/github/license/lem0nez/android-tools-builder.svg)
+![Latest tag](https://img.shields.io/github/tag/lem0nez/android-tools-builder.svg)
+![Repo size](https://img.shields.io/github/repo-size/lem0nez/android-tools-builder.svg)
+
 # Android tools builder
 This script helps to build statically linked Android tools for different mobile
 architectures. All you need is **clone this repository**:
