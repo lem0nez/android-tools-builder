@@ -7,4 +7,9 @@ and this project adheres to
 
 ## [Unreleased]
 ### Added
+- Add support for new tools.
+- Add packages checking support for Arch Linux.
+
+## [1.0.0] - 2019-04-24
+### Added
 - First release.

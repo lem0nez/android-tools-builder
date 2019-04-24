@@ -1,2 +1,4 @@
 *.swp
+.builder*
+.repo*
 .session.vim
