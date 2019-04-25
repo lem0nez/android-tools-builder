@@ -566,7 +566,7 @@ patch_files() {
 
 build_tools() {
   echo '> Building tools...'
-  out_path="$WORK_PATH/out/$(get_conf 'BRANCH')"
+  out_path="$WORK_PATH/$(get_conf 'BRANCH')"
 
   for a in "${ARCHS[@]}"; do
     unset BUILD_TOOLS

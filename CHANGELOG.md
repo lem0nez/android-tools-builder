@@ -10,6 +10,10 @@ and this project adheres to
 - Add support for new tools.
 - Add packages checking support for Arch Linux.
 
+## [1.0.1] - 2019-04-25
+### Fixed
+- Change an output directory for binaries.
+
 ## [1.0.0] - 2019-04-24
 ### Added
 - First release.
