@@ -18,7 +18,7 @@
 set -eo pipefail
 shopt -s nullglob globstar
 
-VERSION='1.0.0'
+VERSION='1.1.0'
 BUILDER_HOME='.builder-home'
 CONF_FILE='.builder.conf'
 REPO_FILE='.repo.py'
@@ -30,11 +30,11 @@ AVAIL_TOOLS=(
   'zipalign'
 )
 
-TOOLS_PATHS=(
+declare -A TOOLS_PATHS=(
   [zipalign]='build/tools/zipalign'
 )
 
-TOOLS_OUT_PATHS=(
+declare -A TOOLS_OUT_PATHS=(
   [zipalign]='out/target/product/generic/system/bin/zipalign'
 )
 
@@ -148,11 +148,11 @@ main() {
   done
 
   build_tools
-  printf '\nAll done! Congratulations!'
+  printf '\nAll done! Congratulations!\n'
   exit 0
 }
 
-# Receive all script parameters.
+# Function receive all script parameters.
 set_work_path() {
   while [[ -n $1 ]]; do
     if [[ ${1::1} != '-' ]] && \
@@ -175,11 +175,17 @@ set_work_path() {
 }
 
 show_help() {
+  if installed_via_deb; then
+    cmd='tools-builder'
+  else
+    cmd='./builder.sh'
+  fi
+
   printf 'Android tools builder v%s.\n'`
       `'This script helps to build statically linked\n'`
       `'tools for different mobile architectures.\n'`
       `'\n'`
-      `'Usage: builder.sh [parameters] [path].\n'`
+      `'Usage: %s [parameters] [path].\n'`
       `'If path didn'"'"'t specify, will use the current\n'`
       `'directory for storing the AOSP files.\n'`
       `'\n'`
@@ -194,7 +200,7 @@ show_help() {
       `'                            the repository. Default: number of\n'`
       `'                            processor cores or %i.\n'`
       `'  -h, --help    Show help and exit.\n' \
-      "$VERSION" "$(sed 's/ /, /g' <<< "${AVAIL_TOOLS[*]}")" \
+      "$VERSION" "$cmd" "$(sed 's/ /, /g' <<< "${AVAIL_TOOLS[*]}")" \
       "$(sed 's/ /, /g' <<< "${AVAIL_ARCHS[*]}")" "$DEFAULT_THREADS"
 }
 
@@ -296,12 +302,26 @@ set_threads() {
   set_conf 'THREADS' "$1"
 }
 
+# Return 0 if the script installed via a .deb package, otherwise 1.
+installed_via_deb() {
+  if [[ $(dirname "$(readlink -f "${BASH_SOURCE[0]}")") == /usr/bin ]]; then
+    return 0
+  else
+    return 1
+  fi
+}
+
 check_pkgs() {
   required_pkgs=(
     'bison' 'build-essential' 'curl' 'flex' 'g++-multilib' 'gcc-multilib'
     'git' 'gnupg' 'gperf' 'lib32ncurses5-dev' 'lib32z1-dev'
     'libc6-dev-i386' 'libgl1-mesa-dev' 'libx11-dev' 'libxml2-utils'
-    'python' 'ruby' 'unzip' 'x11proto-core-dev' 'xsltproc' 'zip' 'zlib1g-dev'
+    'python2' 'ruby' 'unzip' 'x11proto-core-dev' 'xsltproc' 'zip' 'zlib1g-dev'
+  )
+
+  # Alternative packages names with regex support.
+  declare -A alt_pkgs_names=(
+    [g++-multilib]='g\+\+-[0-9]+-multilib'
   )
 
   echo '> Checking required packages...'
@@ -323,7 +343,10 @@ check_pkgs() {
 
   for p in "${required_pkgs[@]}"; do
     if ! grep -qE "^$p([[:space:]]|:)" <<< "$pkgs"; then
-      not_installed_pkgs+=("$p")
+      if [[ -z ${alt_pkgs_names[$p]} ]] || \
+          ! grep -qE "^${alt_pkgs_names[$p]}([[:space:]]|:)" <<< "$pkgs"; then
+        not_installed_pkgs+=("$p")
+      fi
     fi
   done
 
@@ -501,13 +524,24 @@ repo_sync() {
 
 patch_files() {
   echo '> Patching build properties...'
-  patches_path="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/patches"
 
-  if [[ ! -d $patches_path ]]; then
-    # shellcheck disable=SC2059
-    printf >&2 "Can't get patches! Make sure that \"patches\"\\n"`
-        `"folder locate in the directory with script.\\n"
-    exit 1
+  if installed_via_deb; then
+    patches_path='/usr/share/android-tools-builder/patches'
+
+    if [[ ! -d $patches_path ]]; then
+      echo >&2 "A folder with patches doesn't exist! "`
+          `"Try to reinstall the package."
+      exit 1
+    fi
+  else
+    patches_path="$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/patches"
+
+    if [[ ! -d $patches_path ]]; then
+      # shellcheck disable=SC2059
+      printf >&2 "Can't get patches! Make sure that \"patches\"\\n"`
+          `"folder locate in the directory with script.\\n"
+      exit 1
+    fi
   fi
 
   # Get paths relative directories.
@@ -530,8 +564,11 @@ patch_files() {
           patch="$patches_path/$p/$md5.bp"
 
           if [[ -e $patch ]]; then
-            # Read and delete trailing new line character.
-            patch_content=$(tr '\n' '\r' < "$patch" | sed -r 's/\r$//')
+            # Read and delete comments, empty lines
+            # and trailing new line character.
+            patch_content=$(sed -r \
+                '/^[[:space:]]*\/\/.*$/d; /^[[:space:]]*$/d' "$patch" | \
+                tr '\n' '\r' | sed -r 's/\r$//')
 
             # Export makes the variables visible for ruby command.
             export patch_content property
@@ -557,9 +594,9 @@ patch_files() {
       else
         end='ies'
       fi
-      echo "  $p/Android.bp: $patched_props_count propert$end patched."
+      echo "$p/Android.bp: $patched_props_count propert$end patched."
     else
-      echo >&2 "  No patches applied for $p/Android.bp!"
+      echo >&2 "No patches applied for $p/Android.bp!"
     fi
   done
 }

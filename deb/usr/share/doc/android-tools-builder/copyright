@@ -1,0 +1,12 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Upstream-Name: Apache-2.0
+Upstream-Contact: Nikita Dudko <nikita.dudko.95@gmail.com>
+Source: https://github.com/lem0nez/android-tools-builder/
+
+Files: *
+Copyright: 2019 Nikita Dudko <nikita.dudko.95@gmail.com>
+License: Apache-2.0
+
+Files: patches/build/tools/zipalign/*
+Copyright: 2008 The Android Open Source Project
+License: Apache-2.0

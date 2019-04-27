@@ -1,0 +1,24 @@
+android-tools-builder (1.1.0-1) stable; urgency=medium
+
+  * Added
+    - Add alternative packages names support.
+  * Changed
+    - Ignore comments and empty lines of the patches.
+  * Fixed
+    - Correct associative arrays declaring.
+
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Sat, 27 Apr 2019 00:00:00 +0300
+
+android-tools-builder (1.0.1-1) stable; urgency=high
+
+  * Fixed
+    - Change an output directory for binaries.
+
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Thu, 25 Apr 2019 13:05:41 +0300
+
+android-tools-builder (1.0.0-1) stable; urgency=low
+
+  * Added
+    - First release.
+
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Wed, 24 Apr 2019 18:28:45 +0300
