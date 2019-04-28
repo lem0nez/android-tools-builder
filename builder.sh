@@ -46,6 +46,7 @@ AVAIL_ARCHS=(
 
 main() {
   funcs=(
+    'check_cpu'
     'check_pkgs'
     'check_rom'
     'check_git'
@@ -309,6 +310,18 @@ installed_via_deb() {
     return 0
   else
     return 1
+  fi
+}
+
+check_cpu() {
+  echo '> Checking CPU...'
+
+  if ! grep -qiE '^Flags:.*[[:space:]]lm([[:space:]]|$)' '/proc/cpuinfo' && \
+      [[ $(getconf 'LONG_BIT' 2> /dev/null) != '64' ]] && ! grep -qiE \
+      '^Architecture:[[:space:]]*x86_64' <<< "$(lscpu 2> /dev/null)"; then
+
+    echo >&2 'Need a 64-bit machine! Build not possible!'
+    exit 1
   fi
 }
 
