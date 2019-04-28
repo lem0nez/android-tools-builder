@@ -7,7 +7,7 @@ android-tools-builder (1.1.0-1) stable; urgency=medium
   * Fixed
     - Correct associative arrays declaring.
 
- -- Nikita Dudko <nikita.dudko.95@gmail.com>  Sat, 27 Apr 2019 00:00:00 +0300
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Sat, 27 Apr 2019 16:04:18 +0300
 
 android-tools-builder (1.0.1-1) stable; urgency=high
 
