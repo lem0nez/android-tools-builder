@@ -627,7 +627,7 @@ build_tools() {
 
     # shellcheck disable=SC1091
     . build/envsetup.sh > /dev/null
-    lunch "aosp_$a-user" > /dev/null
+    lunch "aosp_$a-eng" > /dev/null
 
     for t in "${BUILD_TOOLS[@]}"; do
       echo "> Building $t for $a..."
