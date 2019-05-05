@@ -1,3 +1,17 @@
+android-tools-builder (1.2.0-1) stable; urgency=medium
+
+  * Added
+    - New patches for following tools:
+      aapt, aapt2 and aidl (including aidl-cpp).
+    - For maintainers: add a function to calculate MD5 hash of
+      an Android.bp file, which excludes unnecessary characters.
+
+  * Changed
+    - New patching algorithm.
+    - New build algorithm.
+
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Sun, 5 May 2019 16:24:00 +0300
+
 android-tools-builder (1.1.0-1) stable; urgency=medium
 
   * Added

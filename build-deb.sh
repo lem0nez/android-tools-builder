@@ -18,7 +18,7 @@
 # This script just build a .deb package
 # for easy dependencies install.
 
-PKG_VER='1.1.0-1'
+PKG_VER='1.2.0-1'
 set -eo pipefail
 
 tmp_dir=$(mktemp -dt tmp.build-deb_XXXXXX)

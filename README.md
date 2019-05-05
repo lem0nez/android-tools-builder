@@ -23,7 +23,7 @@ sudo dpkg -i <package>.deb
 ```
 Find the latest package you can in the **Releases** tab.
 
-## Using
+## Usage
 All you need is run `tools-builder` (or execute `builder.sh` script,
 if you cloned the repository) in the **work directory**. Or, you can specify
 the path in parameters. Builder will store all files in this directory.

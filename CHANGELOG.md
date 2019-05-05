@@ -7,15 +7,26 @@ and this project adheres to
 
 ## [Unreleased]
 ### Added
-- Add support for new tools.
 - Add packages checking support for Arch Linux.
+
+## [1.2.0] - 2019-05-05
+### Added
+- New patches for following tools: aapt, aapt2 and aidl (including aidl-cpp).
+- For maintainers: add a function to calculate MD5 hash of
+  an Android.bp file, which excludes unnecessary characters.
+
+### Changed
+- New patching algorithm.
+- New build algorithm.
 
 ## [1.1.0] - 2019-04-27
 ### Added
 - Add a .deb package for easy dependencies install.
 - Add alternative packages names support.
+
 ### Changed
 - Ignore comments and empty lines of the patches.
+
 ### Fixed
 - Correct associative arrays declaring.
 

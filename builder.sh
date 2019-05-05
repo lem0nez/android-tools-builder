@@ -18,7 +18,7 @@
 set -eo pipefail
 shopt -s nullglob globstar
 
-VERSION='1.1.0'
+VERSION='1.2.0'
 BUILDER_HOME='.builder-home'
 CONF_FILE='.builder.conf'
 REPO_FILE='.repo.py'
@@ -27,15 +27,8 @@ MIN_RAM_GB=4
 MIN_ROM_GB=55
 
 AVAIL_TOOLS=(
-  'zipalign'
-)
-
-declare -A TOOLS_PATHS=(
-  [zipalign]='build/tools/zipalign'
-)
-
-declare -A TOOLS_OUT_PATHS=(
-  [zipalign]='out/target/product/generic/system/bin/zipalign'
+  'aapt' 'aapt2'
+  'aidl' 'zipalign'
 )
 
 AVAIL_ARCHS=(
@@ -73,12 +66,29 @@ main() {
       -h|--help)
         show_help
         exit 0 ;;
+      -m|--hash)
+        if [[ -z $2 ]]; then
+          echo >&2 'Please, specify a path to Android.bp file!'
+          exit 1
+        elif [[ ! -f $2 ]]; then
+          echo >&2 "File \"$2\" doesn't exist!"
+          exit 1
+        fi
+
+        echo "$(calc_md5 "$2")  $2"
+        # In order to parameter can be supplied many times.
+        exit_after_processing=true
+        shift ;;
       -*)
         echo >&2 "Unrecognized parameter: \"$1\"!"
         exit 1 ;;
     esac
     shift
   done
+
+  if [[ $exit_after_processing == true ]]; then
+    exit 0
+  fi
 
   # Tools didn't specify in the parameters.
   if [[ -z $TOOLS ]]; then
@@ -157,9 +167,7 @@ main() {
 # Function receive all script parameters.
 set_work_path() {
   while [[ -n $1 ]]; do
-    if [[ ${1::1} != '-' ]] && \
-        [[ ! $prev_arg =~ (^-(o|a|t|-tools|-archs|-threads)$) ]]; then
-
+    if [[ ${1::1} != '-' ]] && [[ ! $prev_arg =~ (^-([oatm]|-[tah])$) ]]; then
       if [[ ! -d $1 ]]; then
         mkdir -p "$1"
       fi
@@ -201,7 +209,12 @@ show_help() {
       `'  -t, --threads <number>    Set number of threads to use for syncing\n'`
       `'                            the repository. Default: number of\n'`
       `'                            processor cores or %i.\n'`
-      `'  -h, --help    Show help and exit.\n' \
+      `'  -h, --help    Show help and exit.\n'`
+      `'\n'`
+      `'For maintainers:\n'`
+      `'  -m, --hash <path>    Print MD5 hash of Android.bp file,\n'`
+      `'                       excluding unnecessary characters and exit.\n'`
+      `'                       (Can be supplied many times.)\n' \
       "$VERSION" "$cmd" "$(sed 's/ /, /g' <<< "${AVAIL_TOOLS[*]}")" \
       "$(sed 's/ /, /g' <<< "${AVAIL_ARCHS[*]}")" "$DEFAULT_THREADS"
 }
@@ -525,7 +538,8 @@ repo_init() {
   echo '> Initializing...'
 
   cd "$WORK_PATH"
-  "./$REPO_FILE" init -u 'https://android.googlesource.com/platform/manifest' \
+  python2.7 "$REPO_FILE" init -u \
+      'https://android.googlesource.com/platform/manifest' \
       -b "$(get_conf 'BRANCH')" --depth=1 --no-clone-bundle --no-tags
 }
 
@@ -533,11 +547,28 @@ repo_sync() {
   echo '> Syncing (it take a long time)...'
 
   cd "$WORK_PATH"
-  "./$REPO_FILE" sync -cqj"$THREADS" --no-clone-bundle --no-tags
+  python2.7 "$REPO_FILE" sync -cqj"$THREADS" --no-clone-bundle --no-tags
+}
+
+# Calculate MD5 of a Android.bp file, excluding unnecessary characters.
+# First parameter — a path to the file. Return MD5 hash.
+calc_md5() {
+  md5sum <<< "$(sed -r \
+      's#(^[[:space:]]*//.*|[[:space:]]*)$##g; /^[[:space:]]*$/d' "$1")" | \
+      awk '{print $1}'
 }
 
 patch_files() {
-  echo '> Patching build properties...'
+  # Dependencies on libraries or tools, located in supplied paths.
+  declare -A paths_deps=(
+    [build/tools/zipalign]='zipalign'
+    [frameworks/base/libs/androidfw]='aapt,aapt2'
+    [frameworks/base/tools/aapt]='aapt'
+    [frameworks/base/tools/aapt2]='aapt2'
+    [system/tools/aidl]='aidl'
+  )
+
+  echo '> Patching build modules...'
 
   if installed_via_deb; then
     patches_path='/usr/share/android-tools-builder/patches'
@@ -563,70 +594,99 @@ patch_files() {
       sed -r "s#^$patches_path/##; s:/*[^/]+$::; s:^$:.:" | \
       sort -u | tr '\n' '\r')"
 
+  # Tools which won't build as some dependencies didn't patch.
+  IFS=',' read -ra exclude_tools <<< "$(get_conf 'EXCLUDE_TOOLS')"
+
   for p in "${paths[@]}"; do
-    android_bp=$(cat "$WORK_PATH/$p/Android.bp")
-    patched_props_count=0
+    # Dependencies for the current tool.
+    IFS=',' read -ra deps <<< "${paths_deps[$p]}"
 
-    while IFS= read -r line; do
-      if [[ $process == true ]]; then
-        property="$property"$'\r'"$line"
-
-        if grep -qE '^}[[:space:]]*$' <<< "$line"; then
-          # If end of property reached.
-          process=false
-          md5=$(md5sum <<< "$property" | awk '{print $1}')
-          patch="$patches_path/$p/$md5.bp"
-
-          if [[ -e $patch ]]; then
-            # Read and delete comments, empty lines
-            # and trailing new line character.
-            patch_content=$(sed -r \
-                '/^[[:space:]]*\/\/.*$/d; /^[[:space:]]*$/d' "$patch" | \
-                tr '\n' '\r' | sed -r 's/\r$//')
-
-            # Export makes the variables visible for ruby command.
-            export patch_content property
-            # Replace property with patch.
-            android_bp_patched=$(ruby -p -e \
-                "gsub(ENV['property'], ENV['patch_content'])" \
-                <<< "$(tr '\n' '\r' <<< "$android_bp")")
-            tr '\r' '\n' <<< "$android_bp_patched" > "$WORK_PATH/$p/Android.bp"
-
-            patched_props_count=$(( patched_props_count + 1 ))
-          fi
-        fi
-      elif grep -qE '^[a-z_]+[[:space:]]*{[[:space:]]*$' <<< "$line"; then
-        # If it start of property.
-        property=$line
-        process=true
-      fi
-    done <<< "$android_bp"
-
-    if (( patched_props_count != 0 )); then
-      if (( patched_props_count == 1)); then
-        end='y'
-      else
-        end='ies'
-      fi
-      echo "$p/Android.bp: $patched_props_count propert$end patched."
-    else
-      echo >&2 "No patches applied for $p/Android.bp!"
+    if [[ ! -e $WORK_PATH/$p/Android.bp ]]; then
+      echo >&2 "$p/Android.bp didn't exist! Skipping..."
+      exclude_tools+=("$deps")
+      continue
     fi
+
+    md5=$(calc_md5 "$WORK_PATH/$p/Android.bp")
+
+    if [[ -e $patches_path/$p/$md5.bp ]]; then
+      cat "$patches_path/$p/$md5.bp" > "$WORK_PATH/$p/Android.bp"
+      status='patched'
+    else
+      status='not patched'
+      some_files_not_patched=true
+      exclude_tools+=("$deps")
+    fi
+
+    echo "$p/Android.bp. MD5: $md5, status: $status."
   done
+
+  if [[ $some_files_not_patched == true ]]; then
+    # Remove duplicates.
+    IFS=$'\n' exclude_tools=("$(sort -u <<< "${exclude_tools[*]}")")
+    unset IFS
+
+    printf >&2 \
+        "\\nFollowing tools won't build as some dependencies didn't patch:\\n"`
+        `"%s. Please, report about the not patched dependencies\\n"`
+        `"on email: nikita.dudko.95@gmail.com, or GitHub repository:\\n"`
+        `"https://github.com/lem0nez/android-tools-builder.\\n"`
+        `"Also specify your current branch: %s.\\n\\n" \
+        "$(sed 's/ /, /g' <<< "${exclude_tools[*]}")" "$(get_conf 'BRANCH')"
+
+    set_conf 'EXCLUDE_TOOLS' "$(tr ' ' ',' <<< "${exclude_tools[*]}")"
+  fi
 }
 
 build_tools() {
+  declare -A tools_paths=(
+    [aapt]='frameworks/base/tools/aapt'
+    [aapt2]='frameworks/base/tools/aapt2'
+    [aidl]='system/tools/aidl'
+    [zipalign]='build/tools/zipalign'
+  )
+
+  # Output binaries names (implicitly add "_target" postfix).
+  declare -A out_bins=(
+    [aapt]='aapt'
+    [aapt2]='aapt2'
+    [aidl]='aidl,aidl-cpp'
+    [zipalign]='zipalign'
+  )
+
+  # Commands to build tools.
+  declare -A build_cmds=(
+    [aapt]='mm'
+    [aapt2]='mma'
+    [aidl]='mma'
+    [zipalign]='mm'
+  )
+
   echo '> Building tools...'
-  out_path="$WORK_PATH/$(get_conf 'BRANCH')"
+  out_path="$WORK_PATH/out/$(get_conf 'BRANCH')"
+
+  IFS=',' read -ra exclude_tools <<< "$(get_conf 'EXCLUDE_TOOLS')"
+  echo "Excluded tools: $(sed 's/ /, /g' <<< "${exclude_tools[*]}")."
+
+  cd "$WORK_PATH"
+  # shellcheck disable=SC1091
+  . build/envsetup.sh > /dev/null
 
   for a in "${ARCHS[@]}"; do
     unset BUILD_TOOLS
 
     for t in "${TOOLS[@]}"; do
-      if [[ ! -e $out_path/$t/$a/$t ]]; then
-        # If tool didn't build.
-        BUILD_TOOLS+=("$t")
+      if [[ " ${exclude_tools[*]} " =~ ( $t ) ]]; then
+        continue
       fi
+
+      IFS=',' read -ra bins <<< "${out_bins[$t]}"
+      for b in "${bins[@]}"; do
+        if [[ ! -e $out_path/$t/$a/$b ]]; then
+          BUILD_TOOLS+=("$t")
+          break
+        fi
+      done
     done
 
     if [[ -z ${BUILD_TOOLS[*]} ]]; then
@@ -635,21 +695,22 @@ build_tools() {
     fi
 
     echo "> Switching architecture to $a..."
-    cd "$WORK_PATH"
-    rm -rf "out/*" "out/.[!.]*"
-
-    # shellcheck disable=SC1091
-    . build/envsetup.sh > /dev/null
     lunch "aosp_$a-eng" > /dev/null
 
     for t in "${BUILD_TOOLS[@]}"; do
       echo "> Building $t for $a..."
-      cd "${TOOLS_PATHS[$t]}"
-      LANG='en_US.UTF-8' LC_ALL=C mm
+      cd "${tools_paths[$t]}"
+      LANG='en_US.UTF-8' LC_ALL=C "${build_cmds[$t]}"
+      cd "$WORK_PATH"
 
       mkdir -p "$out_path/$t/$a"
-      mv "$WORK_PATH/${TOOLS_OUT_PATHS[$t]}" "$out_path/$t/$a/$t"
-      echo "> $t for $a is built! Location: $out_path/$t/$a/$t."
+      IFS=',' read -ra bins <<< "${out_bins[$t]}"
+
+      for b in "${bins[@]}"; do
+        mv "$WORK_PATH/out/target/product/generic/system/bin/${b}_target" \
+            "$out_path/$t/$a/$b"
+      done
+      echo "> $t for $a is built! Binaries path: $out_path/$t/$a."
     done
   done
 }

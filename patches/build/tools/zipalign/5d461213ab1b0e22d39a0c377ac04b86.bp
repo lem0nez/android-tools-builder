@@ -1,6 +1,10 @@
+//
 // Copyright 2008 The Android Open Source Project
+//
+// Zip alignment tool
+//
 
-cc_binary {
+cc_binary_host {
     name: "zipalign",
 
     srcs: [
@@ -28,6 +32,34 @@ cc_binary {
             host_ldlibs: ["-lpthread"],
             enabled: true,
         },
+    },
+}
+
+// Build executable for the target Android devices.
+cc_binary {
+    name: "zipalign_target",
+
+    srcs: [
+        "ZipAlign.cpp",
+        "ZipEntry.cpp",
+        "ZipFile.cpp",
+    ],
+
+    cflags: ["-Wall", "-Werror"],
+
+    // NOTE: Do not add any shared_libs dependencies because they will break the
+    // static_sdk_tools target.
+    static_libs: [
+        "libutils",
+        "libcutils",
+        "liblog",
+        "libziparchive",
+        "libz",
+        "libbase",
+        "libzopfli",
+    ],
+
+    target: {
         android: {
             enabled: true,
         },

@@ -10,3 +10,19 @@ License: Apache-2.0
 Files: patches/build/tools/zipalign/*
 Copyright: 2008 The Android Open Source Project
 License: Apache-2.0
+
+Files: patches/frameworks/base/libs/androidfw/*
+Copyright: 2010 The Android Open Source Project
+License: Apache-2.0
+
+Files: patches/frameworks/base/tools/aapt/*
+Copyright: 2014 The Android Open Source Project
+License: Apache-2.0
+
+Files: patches/frameworks/base/tools/aapt2/*
+Copyright: 2017 The Android Open Source Project
+License: Apache-2.0
+
+Files: patches/system/tools/aidl/*
+Copyright: 2015 The Android Open Source Project
+License: Apache-2.0
