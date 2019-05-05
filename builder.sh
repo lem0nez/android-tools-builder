@@ -544,7 +544,7 @@ repo_init() {
 }
 
 repo_sync() {
-  echo '> Syncing (it take a long time)...'
+  echo '> Syncing (it take long)...'
 
   cd "$WORK_PATH"
   python2.7 "$REPO_FILE" sync -cqj"$THREADS" --no-clone-bundle --no-tags
@@ -666,7 +666,10 @@ build_tools() {
   out_path="$WORK_PATH/out/$(get_conf 'BRANCH')"
 
   IFS=',' read -ra exclude_tools <<< "$(get_conf 'EXCLUDE_TOOLS')"
-  echo "Excluded tools: $(sed 's/ /, /g' <<< "${exclude_tools[*]}")."
+
+  if [[ -n ${exclude_tools[*]} ]]; then
+    echo "Excluded tools: $(sed 's/ /, /g' <<< "${exclude_tools[*]}")."
+  fi
 
   cd "$WORK_PATH"
   # shellcheck disable=SC1091
