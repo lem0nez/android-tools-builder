@@ -623,8 +623,8 @@ patch_files() {
 
   if [[ $some_files_not_patched == true ]]; then
     # Remove duplicates.
-    IFS=$'\n' exclude_tools=("$(sort -u <<< "${exclude_tools[*]}")")
-    unset IFS
+    read -ra exclude_tools <<< \
+        "$(tr "$IFS" '\n' <<< "${exclude_tools[*]}" | sort -u | tr '\n' "$IFS")"
 
     printf >&2 \
         "\\nFollowing tools won't build as some dependencies didn't patch:\\n"`
