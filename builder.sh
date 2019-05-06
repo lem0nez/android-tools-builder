@@ -103,7 +103,7 @@ main() {
 
   # Architectures didn't specify in the parameters.
   if [[ -z $ARCHS ]]; then
-    config_archs=$(get_conf 'ARCHITECTURES')
+    config_archs=$(get_conf 'ARCHS')
 
     if [[ -z $config_archs ]] || [[ $config_archs == 'all' ]]; then
       ARCHS=("${AVAIL_ARCHS[@]}")
@@ -259,6 +259,7 @@ set_tools() {
     exit 1
   elif [[ $tools == 'all' ]]; then
     TOOLS=("${AVAIL_TOOLS[@]}")
+    set_conf 'TOOLS' "${TOOLS[*]}"
     return
   fi
 
@@ -287,6 +288,7 @@ set_archs() {
     exit 1
   elif [[ $archs == 'all' ]]; then
     ARCHS=("${AVAIL_ARCHS[@]}")
+    set_conf 'ARCHS' "${ARCHS[*]}"
     return
   fi
 
@@ -302,7 +304,7 @@ set_archs() {
     fi
   done
 
-  set_conf 'ARCHITECTURES' "${ARCHS[*]}"
+  set_conf 'ARCHS' "${ARCHS[*]}"
 }
 
 # First parameter — number of threads.
