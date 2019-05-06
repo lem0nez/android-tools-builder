@@ -94,6 +94,7 @@ cc_defaults {
         "libz",
     ],
     group_static_libs: true,
+    static_executable: true,
 }
 
 // ==========================================================
@@ -311,9 +312,9 @@ cc_binary_host {
 }
 
 // Build aapt2 executable for the target Android devices.
-cc_binary_host {
+cc_binary {
     name: "aapt2_target",
     srcs: ["Main.cpp"] + toolSources,
-    static_libs: ["libaapt2_target"],
+    whole_static_libs: ["libaapt2_target"],
     defaults: ["aapt2_defaults_target"],
 }

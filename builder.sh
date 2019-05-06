@@ -662,7 +662,7 @@ build_tools() {
     [zipalign]='mm'
   )
 
-  echo '> Building tools...'
+  echo '> Starting build...'
   out_path="$WORK_PATH/out/$(get_conf 'BRANCH')"
 
   IFS=',' read -ra exclude_tools <<< "$(get_conf 'EXCLUDE_TOOLS')"
