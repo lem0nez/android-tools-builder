@@ -9,6 +9,12 @@ and this project adheres to
 ### Added
 - Add packages checking support for Arch Linux.
 
+## [1.2.2] - 2019-05-07
+### Fixed
+- Fix androidfw patch.
+- Value "all" for tools and architectures now also saves in configuration file.
+- An output directory name definition.
+
 ## [1.2.1] - 2019-05-06
 ### Changed
 - List of excluded tools will print only if it exists.

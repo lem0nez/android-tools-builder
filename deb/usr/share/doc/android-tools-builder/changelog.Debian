@@ -1,3 +1,13 @@
+android-tools-builder (1.2.2-1) stable; urgency=high
+
+  * Fixed
+    - Fix androidfw patch.
+    - Value "all" for tools and architectures
+      now also saves in configuration file.
+    - An output directory name definition.
+
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Tue, 7 May 2019 00:16:00 +0300
+
 android-tools-builder (1.2.1-1) stable; urgency=high
 
   * Changed
