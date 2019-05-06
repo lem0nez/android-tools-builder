@@ -167,6 +167,24 @@ cc_library {
                 enabled: true,
             },
         },
+        host: {
+            shared: {
+                enabled: false,
+            },
+            static_libs: [
+                "libziparchive",
+                "libbase",
+                "liblog",
+                "libcutils",
+                "libutils",
+            ],
+            shared_libs: [
+                "libz",
+            ],
+        },
+        windows: {
+            enabled: true,
+        },
     },
     sanitize: {
         blacklist: "libandroidfw_blacklist.txt",
