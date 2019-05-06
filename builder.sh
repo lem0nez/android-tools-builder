@@ -711,11 +711,18 @@ build_tools() {
       mkdir -p "$out_path/$t/$a"
       IFS=',' read -ra bins <<< "${out_bins[$t]}"
 
+      # Output directory name.
+      if [[ $a == 'arm' ]]; then
+        dir='generic'
+      else
+        dir="generic_$a"
+      fi
+
       for b in "${bins[@]}"; do
-        mv "$WORK_PATH/out/target/product/generic/system/bin/${b}_target" \
+        mv "$WORK_PATH/out/target/product/$dir/system/bin/${b}_target" \
             "$out_path/$t/$a/$b"
       done
-      echo "> $t for $a is built! Binaries path: $out_path/$t/$a."
+      echo "> $t for $a is built! Binaries location: $out_path/$t/$a."
     done
   done
 }
