@@ -1,3 +1,14 @@
+android-tools-builder (1.2.1-1) stable; urgency=high
+
+  * Changed
+    - List of excluded tools will print only if it exists.
+
+  * Fixed
+    - Fix removing of duplicate tools in patching function.
+    - Fix aapt2 patch.
+
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Mon, 6 May 2019 16:26:00 +0300
+
 android-tools-builder (1.2.0-1) stable; urgency=medium
 
   * Added

@@ -9,6 +9,14 @@ and this project adheres to
 ### Added
 - Add packages checking support for Arch Linux.
 
+## [1.2.1] - 2019-05-06
+### Changed
+- List of excluded tools will print only if it exists.
+
+### Fixed
+- Fix removing of duplicate tools in patching function.
+- Fix aapt2 patch.
+
 ## [1.2.0] - 2019-05-05
 ### Added
 - New patches for following tools: aapt, aapt2 and aidl (including aidl-cpp).
