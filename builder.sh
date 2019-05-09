@@ -18,7 +18,7 @@
 set -eo pipefail
 shopt -s nullglob globstar
 
-VERSION='1.2.2'
+VERSION='1.2.3'
 BUILDER_HOME='.builder-home'
 CONF_FILE='.builder.conf'
 REPO_FILE='.repo.py'

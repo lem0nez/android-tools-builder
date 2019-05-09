@@ -55,6 +55,7 @@ cc_defaults {
             enabled: true,
         },
     },
+    static_executable: true,
 }
 
 // Logic shared between aidl and its unittests

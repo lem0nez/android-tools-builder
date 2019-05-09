@@ -9,6 +9,10 @@ and this project adheres to
 ### Added
 - Add packages checking support for Arch Linux.
 
+## [1.2.3] - 2019-05-09
+### Fixed
+- Fix "invalid ELF header" for zipalign and aidl.
+
 ## [1.2.2] - 2019-05-07
 ### Fixed
 - Fix androidfw patch.

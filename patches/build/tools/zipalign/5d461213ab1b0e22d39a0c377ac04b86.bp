@@ -64,4 +64,5 @@ cc_binary {
             enabled: true,
         },
     },
+    static_executable: true,
 }

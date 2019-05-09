@@ -1,3 +1,10 @@
+android-tools-builder (1.2.3-1) stable; urgency=high
+
+  * Fixed
+    - Fix "invalid ELF header" for zipalign and aidl.
+
+ -- Nikita Dudko <nikita.dudko.95@gmail.com>  Thu, 9 May 2019 15:59:50 +0300
+
 android-tools-builder (1.2.2-1) stable; urgency=high
 
   * Fixed
