@@ -368,34 +368,34 @@ check_pkgs() {
         break
       fi
     done
-  fi
-
-  for p in "${required_pkgs[@]}"; do
-    if ! grep -qE "^$p([[:space:]]|:)" <<< "$pkgs"; then
-      if [[ -z ${alt_pkgs_names[$p]} ]] || \
-          ! grep -qE "^${alt_pkgs_names[$p]}([[:space:]]|:)" <<< "$pkgs"; then
-        not_installed_pkgs+=("$p")
-      fi
-    fi
-  done
-
-  if [[ -n ${not_installed_pkgs[*]} ]]; then
-    printf >&2 "Following packages didn't install: %s.\\n"`
-        `"Continue build without this packages (may lead to fail)?\\n"`
-        ` "$(sed 's/ /, /g' <<< "${not_installed_pkgs[*]}")"
-
-    while read -rp 'Yes/No> ' answer; do
-      if ! grep -qiE '^(y|yes)$' <<< "$answer"; then
-        # shellcheck disable=SC2059
-        printf 'Tip: on Debian-based distributions you can\n'`
-            `'install required packages via "sudo apt install" command.\n'`
-            `'\n'`
-            `'Build stopped.\n'
-        exit 1
-      else
-        break
+  else
+    for p in "${required_pkgs[@]}"; do
+      if ! grep -qE "^$p([[:space:]]|:)" <<< "$pkgs"; then
+        if [[ -z ${alt_pkgs_names[$p]} ]] || \
+            ! grep -qE "^${alt_pkgs_names[$p]}([[:space:]]|:)" <<< "$pkgs"; then
+          not_installed_pkgs+=("$p")
+        fi
       fi
     done
+
+    if [[ -n ${not_installed_pkgs[*]} ]]; then
+      printf >&2 "Following packages didn't install: %s.\\n"`
+          `"Continue build without this packages (may lead to fail)?\\n"`
+          ` "$(sed 's/ /, /g' <<< "${not_installed_pkgs[*]}")"
+
+      while read -rp 'Yes/No> ' answer; do
+        if ! grep -qiE '^(y|yes)$' <<< "$answer"; then
+          # shellcheck disable=SC2059
+          printf 'Tip: on Debian-based distributions you can\n'`
+              `'install required packages via "sudo apt install" command.\n'`
+              `'\n'`
+              `'Build stopped.\n'
+          exit 1
+        else
+          break
+        fi
+      done
+    fi
   fi
 }
 
