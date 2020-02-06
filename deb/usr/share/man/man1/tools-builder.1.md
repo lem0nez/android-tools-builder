@@ -9,7 +9,7 @@ Android tools for different mobile architectures
 
 # SYNOPSIS
 
-tools-builder [-t threads] [-a architectures] [-o tools] path
+tools-builder [-t threads] [-b branch] [-a architectures] [-o tools] path
 
 # DESCRIPTION
 

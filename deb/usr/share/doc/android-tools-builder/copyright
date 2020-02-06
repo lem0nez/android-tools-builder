@@ -4,7 +4,7 @@ Upstream-Contact: Nikita Dudko <nikita.dudko.95@gmail.com>
 Source: https://github.com/lem0nez/android-tools-builder/
 
 Files: *
-Copyright: 2019 Nikita Dudko <nikita.dudko.95@gmail.com>
+Copyright: 2020 Nikita Dudko <nikita.dudko.95@gmail.com>
 License: Apache-2.0
 
 Files: usr/share/android-tools-builder/patches/*

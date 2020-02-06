@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright © 2019 Nikita Dudko. All rights reserved.
+# Copyright © 2020 Nikita Dudko. All rights reserved.
 # Contacts: <nikita.dudko.95@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,10 +18,11 @@
 set -eo pipefail
 shopt -s nullglob globstar
 
-VERSION='1.2.3'
+VERSION='1.3.0'
 BUILDER_HOME='.builder-home'
 CONF_FILE='.builder.conf'
 REPO_FILE='.repo.py'
+BRANCH_PATTERN='android-[0-9]+\.[0-9]+\.[0-9]+_r[0-9]+'
 DEFAULT_THREADS=4
 MIN_RAM_GB=4
 MIN_ROM_GB=55
@@ -44,7 +45,7 @@ main() {
     'check_rom'
     'check_git'
     'download_repo'
-    'get_latest_branch'
+    'set_branch'
     'repo_init'
     'repo_sync'
     'patch_files'
@@ -59,6 +60,14 @@ main() {
         shift ;;
       -a|--archs)
         set_archs "$2"
+        shift ;;
+      -b|--branch)
+        if [[ -z $2 ]] || [[ ${2:0:1} == '-' ]]; then
+          echo >&2 "Please, specify the branch name with $1 parameter!"
+          exit 1
+        fi
+
+        SPECIFIED_BRANCH=$2
         shift ;;
       -t|--threads)
         set_threads "$2"
@@ -112,6 +121,29 @@ main() {
     fi
   fi
 
+  step=$(get_conf 'LAST_STEP')
+
+  # Branch specified in the parameters.
+  if [[ -n $SPECIFIED_BRANCH ]]; then
+    if [[ ! $SPECIFIED_BRANCH =~ (^$BRANCH_PATTERN$) ]]; then
+      echo >&2 "Invalid branch name: \"$SPECIFIED_BRANCH\"!"
+      exit 1
+    fi
+
+    if [[ -n $step ]]; then
+      for (( s=0; s != ${#funcs[@]}; ++s )); do
+        if [[ ${funcs[$s]} == 'set_branch' ]]; then
+          if (( step > s )); then
+            # shellcheck disable=SC2059
+            printf 'The specified branch will be ignored,\n'`
+                `'as branch already chosen and checked.\n\n'
+          fi
+          break
+        fi
+      done
+    fi
+  fi
+
   # Number of threads didn't specify in the parameters.
   if [[ -z $THREADS ]]; then
     config_threads=$(get_conf 'THREADS')
@@ -128,7 +160,7 @@ main() {
       `'Tools: %s\n'`
       `'Architectures: %s\n'`
       `'Sync threads: %i\n'`
-      `' ------ ------ ------- ------ ------\n' \
+      `' ------ ------ ------- ------ ------\n\n' \
       "$WORK_PATH" "$(sed 's/ /, /g' <<< "${TOOLS[*]}")" \
       "$(sed 's/ /, /g' <<< "${ARCHS[*]}")" "$THREADS"
 
@@ -147,7 +179,6 @@ main() {
     cp "$gitconfig_path" "$HOME"
   fi
 
-  step=$(get_conf 'LAST_STEP')
   if [[ -z $step ]]; then
     step=0
   fi
@@ -167,7 +198,7 @@ main() {
 # Function receive all script parameters.
 set_work_path() {
   while [[ -n $1 ]]; do
-    if [[ ${1::1} != '-' ]] && [[ ! $prev_arg =~ (^-([oatm]|-[tah])$) ]]; then
+    if [[ ${1::1} != '-' ]] && [[ ! $prev_arg =~ (^-([oabtm]|-[tabh])) ]]; then
       if [[ ! -d $1 ]]; then
         mkdir -p "$1"
       fi
@@ -200,19 +231,20 @@ show_help() {
       `'the current directory for storing the AOSP files.\n'`
       `'\n'`
       `'Parameters:\n'`
-      `'  -o, --tools <tools>    Set tools for build, separated with comma:\n'`
-      `'                         %s\n'`
-      `'                         or all. Default: all.\n'`
-      `'  -a, --archs <archs>    Set target architectures, separated with\n'`
-      `'                         comma: %s\n'`
-      `'                         or all. Default: all.\n'`
-      `'  -t, --threads <number>    Set number of threads to use for syncing\n'`
+      `'  -o, --tools <list>          Set tools to build, separated with\n'`
+      `'                            comma: %s\n'`
+      `'                            or all. Default: all.\n'`
+      `'  -a, --archs <list>          Set target architectures, separated with\n'`
+      `'                            comma: %s\n'`
+      `'                            or all. Default: all.\n'`
+      `'  -b, --branch <name>         Set the branch to sync.\n'`
+      `'  -t, --threads <number>      Set number of threads to use for syncing\n'`
       `'                            the repository. Default: number of\n'`
       `'                            processor cores or %i.\n'`
-      `'  -h, --help    Show help and exit.\n'`
+      `'  -h, --help                  Show help and exit.\n'`
       `'\n'`
       `'For maintainers:\n'`
-      `'  -m, --hash <path>    Print MD5 hash of Android.bp file,\n'`
+      `'  -m, --hash <path>      Print MD5 hash of Android.bp file,\n'`
       `'                       excluding unnecessary characters and exit.\n'`
       `'                       (Can be supplied many times.)\n' \
       "$VERSION" "$cmd" "$(sed 's/ /, /g' <<< "${AVAIL_TOOLS[*]}")" \
@@ -515,25 +547,51 @@ download_repo() {
   repo_path="$WORK_PATH/$REPO_FILE"
   echo '> Downloading repo script...'
 
-  curl -o "$repo_path" -sL \
-      'https://storage.googleapis.com/git-repo-downloads/repo'
+  if ! curl -o "$repo_path" -sL \
+      'https://storage.googleapis.com/git-repo-downloads/repo'; then
+    echo >&2 "Couldn't get the repo script!"
+    exit 1
+  fi
   chmod +x "$repo_path"
 }
 
-get_latest_branch() {
-  echo '> Retrieving a latest branch name...'
-
-  if ! latest_branch=$(git ls-remote -h \
-      'https://android.googlesource.com/platform/manifest' | \
-      sed -r 's#^.+/##g; /^android-[1-9]/!d' | sort -rV | awk 'NR==1'); then
-
-    echo >&2 "Can't get the latest branch name! Using master."
-    set_conf 'BRANCH' 'master'
-    return
+set_branch() {
+  if [[ -z $SPECIFIED_BRANCH ]]; then
+    echo '> Retrieving a latest branch name...'
+  else
+    echo '> Checking branch...'
   fi
 
-  echo "Latest branch: $latest_branch."
-  set_conf 'BRANCH' "$latest_branch"
+  # Get list of all branches from newest to older.
+  if ! branches=$(git ls-remote -h \
+      'https://android.googlesource.com/platform/manifest' 2> /dev/null |\
+      sed -r "s#^.+/##g; /^$BRANCH_PATTERN$/!d" | sort -rV); then
+
+    if [[ -z $SPECIFIED_BRANCH ]]; then
+      echo >&2 "Couldn't get a list of branches! "`
+          `"Please, specify the branch manually."
+      exit 1
+    else
+      echo >&2 "Couldn't check the branch name! "`
+          `"It may lead to fail while syncing."
+      branch=$SPECIFIED_BRANCH
+    fi
+  else
+    if [[ -z $SPECIFIED_BRANCH ]]; then
+      branch=$(echo "$branches" | awk 'NR==1')
+      echo "Latest branch: $branch."
+    else
+      if ! grep -qE "^$SPECIFIED_BRANCH$" <<< "$branches"; then
+        printf >&2 "\\nInvalid branch: %s! Please, specify another one or\\n"`
+            `"don't specify it to automatically retrieve a name "`
+            `"of the latest branch.\\n" "$SPECIFIED_BRANCH"
+        exit 1
+      else
+        branch=$SPECIFIED_BRANCH
+      fi
+    fi
+  fi
+  set_conf 'BRANCH' "$branch"
 }
 
 repo_init() {

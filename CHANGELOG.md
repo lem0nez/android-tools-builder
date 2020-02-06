@@ -9,6 +9,10 @@ and this project adheres to
 ### Added
 - Add packages checking support for Arch Linux.
 
+## [1.3.0] - 2020-02-07
+### Added
+- Add option to set a branch name manually.
+
 ## [1.2.3] - 2019-05-09
 ### Fixed
 - Fix "invalid ELF header" for zipalign and aidl.

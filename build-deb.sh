@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-# Copyright © 2019 Nikita Dudko. All rights reserved.
+# Copyright © 2020 Nikita Dudko. All rights reserved.
 # Contacts: <nikita.dudko.95@gmail.com>
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -18,7 +18,7 @@
 # This script just build a .deb package
 # for easy dependencies install.
 
-PKG_VER='1.2.3-1'
+PKG_VER='1.3.0-1'
 set -eo pipefail
 
 tmp_dir=$(mktemp -dt tmp.build-deb_XXXXXX)
