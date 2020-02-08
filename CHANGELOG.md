@@ -13,6 +13,7 @@ and this project adheres to
 ### Added
 - Add option to set a branch name manually.
 - Check of the hardware requirements according to branch.
+- Add new patches.
 
 ## [1.2.3] - 2019-05-09
 ### Fixed

@@ -73,7 +73,7 @@ cc_defaults {
         "-fno-exceptions",
         "-fno-rtti",
 
-        // Needed if build for the target Android devices.
+        // This flag required to build for the target Android devices.
         "-Wno-error=non-virtual-dtor",
     ],
     target: {

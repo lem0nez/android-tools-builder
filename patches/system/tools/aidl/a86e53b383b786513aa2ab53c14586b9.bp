@@ -46,7 +46,7 @@ cc_defaults {
         "libbase",
         "libcutils",
 
-        // Need include this library if build a static
+        // This library required if build a static
         // binary for the target Android devices.
         "liblog",
     ],
