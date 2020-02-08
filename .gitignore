@@ -2,4 +2,5 @@
 *.swp
 .builder*
 .repo*
+.vimrc
 .session.vim
