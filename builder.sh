@@ -18,7 +18,7 @@
 set -eo pipefail
 shopt -s nullglob globstar
 
-VERSION='1.3.0'
+VERSION='1.3.1'
 BUILDER_HOME='.builder-home'
 CONF_FILE='.builder.conf'
 REPO_FILE='.repo.py'
@@ -28,10 +28,10 @@ DEFAULT_THREADS=4
 # Key — pattern of the branch version, value — size in gigabytes.
 declare -A MIN_RAM=(
   ['[0-9]{2}\..*']=12
-  ['[1-9]\..*']=4
+  ['[1-9]\..*']=6
 )
 declare -A MIN_ROM=(
-  ['[0-9]{2}\..*']=66
+  ['[0-9]{2}\..*']=70
   ['[1-9]\..*']=55
 )
 

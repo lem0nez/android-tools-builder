@@ -1,12 +1,12 @@
 Package: android-tools-builder
-Version: 1.3.0-1
+Version: 1.3.1-1
 Section: devel
 Priority: optional
 Architecture: all
 Depends: bison, build-essential, curl, flex, g++-multilib, gcc-multilib, git, gnupg, gperf, lib32ncurses5-dev, lib32z1-dev, libc6-dev-i386, libgl1-mesa-dev, libx11-dev, libxml2-utils, python2.7, ruby, unzip, x11proto-core-dev, xsltproc, zip, zlib1g-dev
 Maintainer: Nikita Dudko <nikita.dudko.95@gmail.com>
 Origin: https://github.com/lem0nez/android-tools-builder
-X-Source: https://github.com/lem0nez/android-tools-builder/tarball/v1.3.0
+X-Source: https://github.com/lem0nez/android-tools-builder/tarball/v1.3.1
 Description: Android tools builder.
  Helps to build statically linked Android
  tools for different mobile architectures.

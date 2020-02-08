@@ -9,6 +9,10 @@ and this project adheres to
 ### Added
 - Add packages checking support for Arch Linux.
 
+## [1.3.1] - 2020-02-09
+### Changed
+- Update hardware requirements.
+
 ## [1.3.0] - 2020-02-08
 ### Added
 - Add option to set a branch name manually.
