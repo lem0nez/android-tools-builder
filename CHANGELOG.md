@@ -9,6 +9,13 @@ and this project adheres to
 ### Added
 - Add packages checking support for Arch Linux.
 
+## [1.4.0] - 2020-02-12
+### Added
+- Add check of the Python version.
+
+### Changed
+- Update the required Python version.
+
 ## [1.3.1] - 2020-02-09
 ### Changed
 - Update hardware requirements.

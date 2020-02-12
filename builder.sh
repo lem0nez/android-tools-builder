@@ -18,7 +18,7 @@
 set -eo pipefail
 shopt -s nullglob globstar
 
-VERSION='1.3.1'
+VERSION='1.4.0'
 BUILDER_HOME='.builder-home'
 CONF_FILE='.builder.conf'
 REPO_FILE='.repo.py'
@@ -384,7 +384,7 @@ check_pkgs() {
     'bison' 'build-essential' 'curl' 'flex' 'g++-multilib' 'gcc-multilib'
     'git' 'gnupg' 'gperf' 'lib32ncurses5-dev' 'lib32z1-dev'
     'libc6-dev-i386' 'libgl1-mesa-dev' 'libx11-dev' 'libxml2-utils'
-    'python2.7' 'ruby' 'unzip' 'x11proto-core-dev' 'xsltproc' 'zip' 'zlib1g-dev'
+    'python3' 'ruby' 'unzip' 'x11proto-core-dev' 'xsltproc' 'zip' 'zlib1g-dev'
   )
 
   # Alternative packages names with regex support.
@@ -435,6 +435,26 @@ check_pkgs() {
         fi
       done
     fi
+  fi
+
+
+  if [[ ! $(python3 --version 2> /dev/null) =~ (^Python 3\.[6-9]) ]]; then
+    # shellcheck disable=SC2059
+    printf >&2 'Version of the Python should be at least 3.6!\n'`
+        `'Continue build without required Python package (it may lead to fail)?\n'
+
+    while read -rp 'Yes/No> ' answer; do
+      if ! grep -qiE '^(y|yes)$' <<< "$answer"; then
+        # shellcheck disable=SC2059
+        printf 'Tip: on Debian-based distributions you can install\n'`
+            `'the Python package via "sudo apt install" command.\n'`
+            `'\n'`
+            `'Build stopped.\n'
+        exit 1
+      else
+        break
+      fi
+    done
   fi
 }
 
@@ -621,7 +641,7 @@ repo_init() {
   echo '> Initializing...'
 
   cd "$WORK_PATH"
-  python2.7 "$REPO_FILE" init -u \
+  python3 "$REPO_FILE" init -u \
       'https://android.googlesource.com/platform/manifest' \
       -b "$(get_conf 'BRANCH')" --depth=1 --no-clone-bundle --no-tags
 }
@@ -630,7 +650,7 @@ repo_sync() {
   echo '> Syncing (it take long)...'
 
   cd "$WORK_PATH"
-  python2.7 "$REPO_FILE" sync -cqj"$THREADS" --no-clone-bundle --no-tags
+  python3 "$REPO_FILE" sync -cqj"$THREADS" --no-clone-bundle --no-tags
 }
 
 # Calculate MD5 of a Android.bp file, excluding unnecessary characters.
